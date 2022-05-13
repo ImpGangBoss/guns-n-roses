@@ -10,7 +10,7 @@ public class ThirdPersonMovement : MonoBehaviour
 
     [Header("Constants")]
     [SerializeField] float speed = 6;
-    [SerializeField] float gravity = 9.81f;
+    [SerializeField] float gravity = -9.82f;
     [SerializeField] float inputThreshold = 0.1f;
     [SerializeField] float jumpHeight = 3;
     Vector3 velocity;
@@ -34,7 +34,6 @@ public class ThirdPersonMovement : MonoBehaviour
     {
         Cursor.lockState = CursorLockMode.Locked;
         //sensitivity = new Vector3(sensitivityX, 0f, sensitivityY);
-        gravity *= 1f;
     }
 
     void Update()
@@ -46,7 +45,7 @@ public class ThirdPersonMovement : MonoBehaviour
             velocity.y = -2f;
 
         if (Input.GetButtonDown("Jump") && isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
 
         //gravity
         velocity.y += gravity * Time.deltaTime;
@@ -60,11 +59,14 @@ public class ThirdPersonMovement : MonoBehaviour
 
         if (direction.magnitude > inputThreshold)
         {   
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + gameMainCamera.rotation.y;
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + gameMainCamera.eulerAngles.y;
 
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
             
-            transform.rotation = Quaternion.Euler(0f, angle, 0f);    
+            // if (vertical > inputThreshold && Mathf.Abs(horizontal) < inputThreshold)
+            //      rotate camera relatively to payer rotaion
+            // else
+                transform.rotation = Quaternion.Euler(0f, angle, 0f);        
                 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
             controller.Move(moveDir.normalized * speed * Time.deltaTime);
