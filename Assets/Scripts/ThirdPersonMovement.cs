@@ -21,6 +21,7 @@ public class ThirdPersonMovement : MonoBehaviour
     [SerializeField] Transform groundCheck;
     [SerializeField] float groundDistance = 0.4f;
     [SerializeField] LayerMask groundMask;
+    [SerializeField] float gravityPower = -10f;
     bool isGrounded;
 
     [Header("Smoothness")]
@@ -45,10 +46,10 @@ public class ThirdPersonMovement : MonoBehaviour
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
         if (isGrounded && velocity.y < 0f)
-            velocity.y = 0f;
+            velocity.y = gravityPower; // gravity push us down when we stand on ground
 
         if (Input.GetButtonDown("Jump") && isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity);
+            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity); // -2 is mathematical coefficient
 
         if (Input.GetMouseButtonDown(0))
             Player.Instance.Shoot();
@@ -68,7 +69,7 @@ public class ThirdPersonMovement : MonoBehaviour
             float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + gameMainCamera.eulerAngles.y;
             float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
 
-            if (vertical >= inputThreshold || Mathf.Abs(horizontal) >= inputThreshold)
+            if (vertical >= inputThreshold || Mathf.Abs(horizontal) >= inputThreshold) // don't rotate camera when we are moving backward
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
                 
             Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
