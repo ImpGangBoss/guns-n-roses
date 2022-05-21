@@ -54,5 +54,7 @@ public class Player : MonoBehaviour
     {
         _pool.Release(bullet);
     }
+
+    public Vector3 GetPosition() => transform.position;
 }
 

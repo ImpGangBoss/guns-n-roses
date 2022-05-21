@@ -46,7 +46,7 @@ public class ThirdPersonMovement : MonoBehaviour
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
         if (isGrounded && velocity.y < 0f)
-            velocity.y = gravityPower; // gravity push us down when we stand on ground
+            velocity.y = gravity; // gravity push us down when we stand on ground
 
         if (Input.GetButtonDown("Jump") && isGrounded)
             velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity); // -2 is mathematical coefficient
