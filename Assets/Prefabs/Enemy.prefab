@@ -152,19 +152,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   whatIsGround:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 576
   whatIsPlayer:
     serializedVersion: 2
     m_Bits: 256
   whatIsObstacle:
     serializedVersion: 2
     m_Bits: 512
+  whatIsFriend:
+    serializedVersion: 2
+    m_Bits: 128
   health: 120
   walkPoint: {x: 0, y: 0, z: 0}
   walkPointRange: 10
   timeBetweenAttacks: 5
   pushForce: 9
-  sightRange: 10
+  sightRange: 5
   attackRange: 1
   obstacleDetectionRange: 2
   playerInSightRange: 0
@@ -174,4 +177,5 @@ MonoBehaviour:
   mutationRate: 0.05
   exponentialCoefficientA: 5
   obstacleDetectionPenalty: 1.22
+  friendDetectionBonus: 1.15
   generationLifeTime: 10

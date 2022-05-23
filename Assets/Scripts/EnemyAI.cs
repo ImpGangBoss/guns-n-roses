@@ -6,15 +6,17 @@ using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    Transform player;
-    NavMeshAgent agent;
+    [Header("Common Props")]
     [SerializeField] LayerMask whatIsGround;
     [SerializeField] LayerMask whatIsPlayer;
     [SerializeField] LayerMask whatIsObstacle;
-
+    [SerializeField] LayerMask whatIsFriend;
     [SerializeField] float health = 100f;
+    Transform player;
+    NavMeshAgent agent;
+    Rigidbody rb;
 
-    [Header("Patroling")]
+    [Header("Patrolling")]
     [SerializeField] Vector3 walkPoint;
     [SerializeField] float walkPointRange;
     bool walkPointSet;
@@ -34,23 +36,25 @@ public class EnemyAI : MonoBehaviour
     //[SerializeField] bool obstacleInSightRange;
 
     [Header("Genetic Algorithm")]
-    GeneticAlgorithm<float> ga;
-    int dnaLength = 2;
-    //[SerializeField] int maxGenerations = 1000;
+    [SerializeField] float jumpHeight = 6f;
     [SerializeField] int populationSize = 200;
     [SerializeField] int elitism = 10;
     [SerializeField] float mutationRate = 0.05f;
     [SerializeField] int exponentialCoefficientA = 5;
     [Range(1f, 1.5f)]
-    [SerializeField] float obstacleDetectionPenalty = 1.01f;
+    [SerializeField] float obstacleDetectionPenalty = 1.03f;
+    [Range(1f, 1.5f)]
+    [SerializeField] float friendDetectionBonus = 1.025f;
     [SerializeField] float generationLifeTime = 10f; 
-
-    float generationTimer = 0f;
+    GeneticAlgorithm<float> ga;
+    int dnaLength = 2;
+    float generationTimer = 10f;
 
     void Start()
     {
         player = Player.Instance.gameObject.transform;
         agent = GetComponent<NavMeshAgent>();
+        rb = GetComponent<Rigidbody>();
         ga = new GeneticAlgorithm<float>(populationSize, dnaLength, GetRandomFloat, FitnessFunction, elitism, mutationRate);
 
         if (GetComponent<NavMeshAgent>() == null)
@@ -93,22 +97,22 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 currentPosition = transform.position;
         Vector3 nextPosition = new Vector3(currentPosition.x + dna.Genes[0], currentPosition.y, currentPosition.z + dna.Genes[1]);
-        if (Physics.Raycast(nextPosition, -transform.up, 2f, whatIsGround))
+        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround))
         {
             var distanceToPlayer = Vector3.Distance(Player.Instance.GetPosition(), nextPosition);
             score = 1f / (distanceToPlayer - attackRange);
 
             if (Physics.CheckSphere(nextPosition, obstacleDetectionRange, whatIsObstacle))
                 score /= obstacleDetectionPenalty;
+
+            if (Physics.CheckSphere(nextPosition, sightRange, whatIsFriend))
+                score *= friendDetectionBonus;
         }
 
         if (exponentialCoefficientA > 1)
             score = (Mathf.Pow(exponentialCoefficientA, score) - 1) / (exponentialCoefficientA - 1);
         else
             Debug.Log("Low efficiency. Better with A > 1");
-
-        Debug.LogError("Genes: " + dna.Genes[0] + "; " + dna.Genes[1]);
-        Debug.LogError("Score: " + score);
 
         return score;
     }
@@ -136,10 +140,6 @@ public class EnemyAI : MonoBehaviour
         Vector3 pos = transform.position;
         walkPoint = new Vector3(pos.x + ga.BestGenes[0], pos.y, pos.z + ga.BestGenes[1]);
 
-        Debug.LogWarning("Generation: " + ga.Generation);
-        Debug.LogWarning("Best Fitness: " + ga.BestFitness);
-        Debug.LogWarning("Best Genes: " + ga.BestGenes[0] + "; " + ga.BestGenes[1]);
-
         walkPointSet = true;
     }
 
@@ -152,14 +152,11 @@ public class EnemyAI : MonoBehaviour
     {
         //Make sure enemy doesn't move
         agent.SetDestination(transform.position);
-
-        //transform.LookAt(player);
+        transform.LookAt(player);
 
         if (!alreadyAttacked)
         {
             ///Attack code here
-            Rigidbody rb = GetComponent<Rigidbody>();
-
             rb.velocity = Vector3.zero;
             rb.AddForce(transform.up * pushForce * 50f, ForceMode.Impulse);
             
@@ -189,6 +186,13 @@ public class EnemyAI : MonoBehaviour
         Destroy(gameObject);
     }
 
+    void Jump()
+    {
+        Debug.LogError("Jump");
+        rb.velocity += jumpHeight * Vector3.up;
+        //rb.AddForce(transform.up * 100f);
+    }
+
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -203,5 +207,8 @@ public class EnemyAI : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Bullet"))
             TakeDamage(other.gameObject.GetComponent<Bullet>().Damage);
+
+        if (other.gameObject.CompareTag("Obstacle"))
+            Jump();
     }
 }
