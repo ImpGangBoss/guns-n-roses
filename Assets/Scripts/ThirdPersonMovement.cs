@@ -16,12 +16,12 @@ public class ThirdPersonMovement : MonoBehaviour
     [SerializeField] float inputThreshold = 0.1f;
     [SerializeField] float jumpHeight = 3;
     Vector3 velocity;
+    Vector3 moveDirection;
 
     [Header("Ground Check")]
     [SerializeField] Transform groundCheck;
     [SerializeField] float groundDistance = 0.4f;
     [SerializeField] LayerMask groundMask;
-    [SerializeField] float gravityPower = -10f;
     bool isGrounded;
 
     [Header("Smoothness")]
@@ -72,8 +72,10 @@ public class ThirdPersonMovement : MonoBehaviour
             if (vertical >= inputThreshold || Mathf.Abs(horizontal) >= inputThreshold) // don't rotate camera when we are moving backward
                 transform.rotation = Quaternion.Euler(0f, angle, 0f);
                 
-            Vector3 moveDir = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDir.normalized * speed * Time.deltaTime);
+            moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(moveDirection.normalized * speed * Time.deltaTime);
         }
     }
+
+    public Vector3 GetMoveDirection() => moveDirection;
 }

@@ -33,10 +33,8 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] float obstacleDetectionRange;
     [SerializeField] bool playerInSightRange;
     [SerializeField] bool playerInAttackRange;
-    //[SerializeField] bool obstacleInSightRange;
 
     [Header("Genetic Algorithm")]
-    [SerializeField] float jumpHeight = 6f;
     [SerializeField] int populationSize = 200;
     [SerializeField] int elitism = 10;
     [SerializeField] float mutationRate = 0.05f;
@@ -107,6 +105,7 @@ public class EnemyAI : MonoBehaviour
 
             if (Physics.CheckSphere(nextPosition, sightRange, whatIsFriend))
                 score *= friendDetectionBonus;
+
         }
 
         if (exponentialCoefficientA > 1)
@@ -156,14 +155,14 @@ public class EnemyAI : MonoBehaviour
 
         if (!alreadyAttacked)
         {
+            agent.enabled = false;
             ///Attack code here
             rb.velocity = Vector3.zero;
-            rb.AddForce(transform.up * pushForce * 50f, ForceMode.Impulse);
-            
-            // rb.velocity += transform.up * pushForce * rb.mass;
+            rb.AddForce(Player.Instance.GetMoveDirection() * pushForce, ForceMode.VelocityChange);
+            rb.AddForce(transform.up * pushForce, ForceMode.VelocityChange);
             ///End of attack code
-
             alreadyAttacked = true;
+            
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
     }
@@ -171,6 +170,7 @@ public class EnemyAI : MonoBehaviour
     void ResetAttack()
     {
         alreadyAttacked = false;
+        agent.enabled = true;
     }
 
     void TakeDamage(float damage)
@@ -184,13 +184,6 @@ public class EnemyAI : MonoBehaviour
     void DestroyEnemy()
     {
         Destroy(gameObject);
-    }
-
-    void Jump()
-    {
-        Debug.LogError("Jump");
-        rb.velocity += jumpHeight * Vector3.up;
-        //rb.AddForce(transform.up * 100f);
     }
 
     void OnDrawGizmosSelected()
@@ -207,8 +200,5 @@ public class EnemyAI : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Bullet"))
             TakeDamage(other.gameObject.GetComponent<Bullet>().Damage);
-
-        if (other.gameObject.CompareTag("Obstacle"))
-            Jump();
     }
 }

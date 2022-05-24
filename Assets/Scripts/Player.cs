@@ -8,7 +8,8 @@ public class Player : MonoBehaviour
     [SerializeField] GameObject bulletPrefab;
     [SerializeField] Transform spawnPoint;
     [SerializeField] Transform container;
-    private ObjectPool<GameObject> _pool;
+    ObjectPool<GameObject> _pool;
+    ThirdPersonMovement movementController;
 
     public static Player Instance { get; private set; }
     private void Awake() 
@@ -16,11 +17,15 @@ public class Player : MonoBehaviour
         if (Instance != null && Instance != this) 
             Destroy(this); 
         else 
-            Instance = this; 
+            Instance = this;
     }
 
     void Start()
     {
+        movementController = transform.GetComponent<ThirdPersonMovement>();
+        if (movementController == null)
+            Debug.LogError("Movement controller wasn't found"); 
+
         _pool = new ObjectPool<GameObject>(() =>
             {
                 return Instantiate(bulletPrefab);
@@ -56,5 +61,6 @@ public class Player : MonoBehaviour
     }
 
     public Vector3 GetPosition() => transform.position;
+    public Vector3 GetMoveDirection() => movementController.GetMoveDirection();
 }
 
