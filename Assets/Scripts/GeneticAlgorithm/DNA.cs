@@ -7,14 +7,14 @@ public class DNA<T>
 {
     public T[] Genes { get; private set;}
     public float Fitness { get; private set;}
-    private  Func<T> getRandomGene;
-    private Func<int, float> fitnessFunction;
+    private readonly Func<T> _getRandomGene;
+    private readonly Func<int, float> _fitnessFunction;
 
     public DNA(int size, Func<T> getRandomGene, Func<int, float> fitnessFunction, bool initGenes = true)
     {
         Genes = new T[size];
-        this.getRandomGene = getRandomGene;
-        this.fitnessFunction = fitnessFunction;
+        this._getRandomGene = getRandomGene;
+        this._fitnessFunction = fitnessFunction;
 
         if (initGenes)
             for (int i = 0; i < Genes.Length; i++)
@@ -24,13 +24,13 @@ public class DNA<T>
 
     public float CalculateFitness(int index)
     {
-        Fitness = fitnessFunction(index);
+        Fitness = _fitnessFunction(index);
         return Fitness;
     }
 
     public DNA<T> Crossover(DNA<T> otherParent)
     {
-        DNA<T> child = new DNA<T>(Genes.Length, getRandomGene, fitnessFunction, false);
+        DNA<T> child = new DNA<T>(Genes.Length, _getRandomGene, _fitnessFunction, false);
 
         for (int i = 0; i < Genes.Length; ++i)
             child.Genes[i] = UnityEngine.Random.value < 0.5f ? Genes[i] : otherParent.Genes[i];
@@ -42,6 +42,6 @@ public class DNA<T>
     {
         for (int i = 0; i < Genes.Length; i++)
             if (UnityEngine.Random.value < mutationRate)
-                 Genes[i] = getRandomGene();
+                 Genes[i] = _getRandomGene();
     }
 }

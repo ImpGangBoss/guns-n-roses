@@ -2,12 +2,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class ThirdPersonMovement : MonoBehaviour
 {
     [Header("Refs Settings")]
     [SerializeField] CharacterController controller;
     [SerializeField] Transform gameMainCamera;
+    [SerializeField] CinemachineFreeLook freeLook;
 
     [Header("Constants")]
     [SerializeField] float mass = 4;
@@ -15,24 +17,24 @@ public class ThirdPersonMovement : MonoBehaviour
     [SerializeField] float gravity = -9.82f;
     [SerializeField] float inputThreshold = 0.1f;
     [SerializeField] float jumpHeight = 3;
-    Vector3 velocity;
-    Vector3 moveDirection;
+    Vector3 _velocity;
+    Vector3 _moveDirection;
 
     [Header("Ground Check")]
     [SerializeField] Transform groundCheck;
     [SerializeField] float groundDistance = 0.4f;
     [SerializeField] LayerMask groundMask;
-    bool isGrounded;
+    bool _isGrounded;
 
     [Header("Smoothness")]
     [SerializeField] float turnSmoothTime = 0.4f;
-    //[SerializeField] float playerRotationThreshold = 0.05f;
+    [SerializeField] float recenterThreshold = 0.75f;
     // [Range(0, 2)]
     // [SerializeField] float sensitivityX = 0.8f;
     // [Range(0, 2)]
     // [SerializeField] float sensitivityY = 1f;
     //Vector3 sensitivity;
-    float turnSmoothVelocity;
+    float _turnSmoothVelocity;
 
     void Start()
     {
@@ -43,39 +45,47 @@ public class ThirdPersonMovement : MonoBehaviour
     void Update()
     {
         //jump
-        isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
+        _isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-        if (isGrounded && velocity.y < 0f)
-            velocity.y = gravity; // gravity push us down when we stand on ground
+        if (_isGrounded && _velocity.y < 0f)
+            _velocity.y = gravity; //gravity push us down when we stand on ground
 
-        if (Input.GetButtonDown("Jump") && isGrounded)
-            velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity); // -2 is mathematical coefficient
+        if (Input.GetButtonDown("Jump") && _isGrounded)
+            _velocity.y = Mathf.Sqrt(jumpHeight * -2 * gravity); //-2 is mathematical coefficient
 
         if (Input.GetMouseButtonDown(0))
             Player.Instance.Shoot();
 
         //gravity
-        velocity.y += gravity * mass * Time.deltaTime;
-        controller.Move(velocity * Time.deltaTime);
+        _velocity.y += gravity * mass * Time.deltaTime;
+        controller.Move(_velocity * Time.deltaTime);
 
         //walk
         float horizontal = Input.GetAxisRaw("Horizontal");
         float vertical = Input.GetAxisRaw("Vertical");
 
-        Vector3 direction =  new Vector3(horizontal, 0f, vertical).normalized;
+        Vector3 direction = new Vector3(horizontal, 0f, vertical).normalized;
 
         if (direction.magnitude > inputThreshold)
         {
-            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + gameMainCamera.eulerAngles.y;
-            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref turnSmoothVelocity, turnSmoothTime);
+            float cameraAngle = gameMainCamera.eulerAngles.y;
+            float targetAngle = Mathf.Atan2(direction.x, direction.z) * Mathf.Rad2Deg + cameraAngle;
+            float angle = Mathf.SmoothDampAngle(transform.eulerAngles.y, targetAngle, ref _turnSmoothVelocity,
+                turnSmoothTime);
 
-            if (vertical >= inputThreshold || Mathf.Abs(horizontal) >= inputThreshold) // don't rotate camera when we are moving backward
-                transform.rotation = Quaternion.Euler(0f, angle, 0f);
-                
-            moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
-            controller.Move(moveDirection.normalized * speed * Time.deltaTime);
+            //recentring camera
+            freeLook.m_RecenterToTargetHeading.m_enabled =
+                Mathf.Abs(cameraAngle - transform.eulerAngles.y) > recenterThreshold;
+
+            if (vertical >= Mathf.Sqrt(inputThreshold) && Mathf.Abs(horizontal) < Mathf.Sqrt(inputThreshold))
+                transform.rotation = Quaternion.Euler(0f, angle, 0f); //player's rotation follows the camera
+
+            _moveDirection = Quaternion.Euler(0f, targetAngle, 0f) * Vector3.forward;
+            controller.Move(_moveDirection.normalized * speed * Time.deltaTime);
         }
+        else
+            freeLook.m_RecenterToTargetHeading.m_enabled = false;
     }
 
-    public Vector3 GetMoveDirection() => moveDirection;
+    public Vector3 GetMoveDirection() => _moveDirection;
 }

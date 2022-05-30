@@ -14,8 +14,8 @@ public class GeneticAlgorithm<T>
     public int Elitism;
     public float MutationRate;
 
-    private float fitnessSum;
-    private List<DNA<T>> newPopulation;
+    private float _fitnessSum;
+    private List<DNA<T>> _newPopulation;
 
     public GeneticAlgorithm(int popSize, int dnaSize, Func<T> getRandomGene,
      Func<int, float> fitnessFunction, int elitism,  float mutationRate = 0.05f)
@@ -24,7 +24,7 @@ public class GeneticAlgorithm<T>
         Elitism = elitism;
         MutationRate = mutationRate;
         Population = new List<DNA<T>>(popSize);
-        newPopulation = new List<DNA<T>>(popSize);
+        _newPopulation = new List<DNA<T>>(popSize);
 
         BestGenes = new T[dnaSize];
         
@@ -34,12 +34,9 @@ public class GeneticAlgorithm<T>
 
     public int CompareDNA(DNA<T> a, DNA<T> b)
     {
-        if (a.Fitness > b.Fitness)
-            return -1;
-        else if (a.Fitness < b.Fitness)
-            return 1;
-        else
-            return 0;
+        if (a.Fitness > b.Fitness) return -1;
+        if (a.Fitness < b.Fitness) return 1;
+        return 0;
     } 
 
     public void NewGeneration()
@@ -48,11 +45,11 @@ public class GeneticAlgorithm<T>
             return;
 
         CalculateFitness();
-        newPopulation.Clear();
+        _newPopulation.Clear();
 
-        for(int i = 0; i < Population.Count; ++i)
+        for (int i = 0; i < Population.Count; ++i)
             if (i < Elitism)
-                newPopulation.Add(Population[i]);
+                _newPopulation.Add(Population[i]);
             else
             {
                 DNA<T> parent1 = ChooseParent();
@@ -61,24 +58,23 @@ public class GeneticAlgorithm<T>
                 if (parent1 == null || parent2 == null)
                     Debug.LogError("One of parents is equal to null");
 
+                parent1 ??= GetRandomParent();
+
                 DNA<T> child = parent1.Crossover(parent2);
 
                 child.Mutate(MutationRate);
-                newPopulation.Add(child);
+                _newPopulation.Add(child);
             }
 
-        var tmpList = Population;
-        Population = newPopulation;
-        newPopulation = tmpList;
-
+        (Population, _newPopulation) = (_newPopulation, Population);
         Generation++;
     }
 
     public void CalculateFitness()
     {
-        fitnessSum = 0f;
+        _fitnessSum = 0f;
         for (int i = 0; i < Population.Count; ++i)
-            fitnessSum += Population[i].CalculateFitness(i);
+            _fitnessSum += Population[i].CalculateFitness(i);
 
         Population.Sort(CompareDNA);
         
@@ -90,16 +86,18 @@ public class GeneticAlgorithm<T>
 
     private DNA<T> ChooseParent()
     {
-        float randomNumber = UnityEngine.Random.value * fitnessSum;
+        float randomNumber = UnityEngine.Random.value * _fitnessSum;
 
-        for (int i = 0; i < Population.Count; ++i)
+        foreach (var individual in Population)
         {
-            if (randomNumber < Population[i].Fitness)
-                return Population[i];
+            if (randomNumber < individual.Fitness)
+                return individual;
 
-            randomNumber -= Population[i].Fitness;
+            randomNumber -= individual.Fitness;
         } 
 
         return null;
     }
+
+    private DNA<T> GetRandomParent() => Population[UnityEngine.Random.Range(0, Population.Count)];
 }

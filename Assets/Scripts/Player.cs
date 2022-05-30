@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -9,7 +7,7 @@ public class Player : MonoBehaviour
     [SerializeField] Transform spawnPoint;
     [SerializeField] Transform container;
     ObjectPool<GameObject> _pool;
-    ThirdPersonMovement movementController;
+    ThirdPersonMovement _movementController;
 
     public static Player Instance { get; private set; }
     private void Awake() 
@@ -22,32 +20,25 @@ public class Player : MonoBehaviour
 
     void Start()
     {
-        movementController = transform.GetComponent<ThirdPersonMovement>();
-        if (movementController == null)
+        _movementController = transform.GetComponent<ThirdPersonMovement>();
+        if (_movementController == null)
             Debug.LogError("Movement controller wasn't found"); 
 
-        _pool = new ObjectPool<GameObject>(() =>
-            {
-                return Instantiate(bulletPrefab);
-            }, 
-            
-            (bullet) =>
+        _pool = new ObjectPool<GameObject>(() => Instantiate(bulletPrefab),
+            bullet =>
             {
                 bullet.transform.SetPositionAndRotation(spawnPoint.position, transform.rotation);
                 bullet.transform.SetParent(container);
                 bullet.gameObject.SetActive(true);
-            }, 
-            
-            (bullet) =>
+            },
+            bullet =>
             {
                 bullet.gameObject.SetActive(false);
-            }, 
-            
-            (bullet) =>
+            },
+            bullet =>
             {
                 Destroy(bullet.gameObject);
-            }, false, 10, 100
-        );
+            }, false, 10, 100);
     }
 
     public void Shoot()
@@ -61,6 +52,6 @@ public class Player : MonoBehaviour
     }
 
     public Vector3 GetPosition() => transform.position;
-    public Vector3 GetMoveDirection() => movementController.GetMoveDirection();
+    public Vector3 GetMoveDirection() => _movementController.GetMoveDirection();
 }
 

@@ -12,20 +12,20 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] LayerMask whatIsObstacle;
     [SerializeField] LayerMask whatIsFriend;
     [SerializeField] float health = 100f;
-    Transform player;
-    NavMeshAgent agent;
-    Rigidbody rb;
+    Transform _player;
+    NavMeshAgent _agent;
+    Rigidbody _rb;
 
     [Header("Patrolling")]
     [SerializeField] Vector3 walkPoint;
     [SerializeField] float walkPointRange;
-    bool walkPointSet;
+    bool _walkPointSet;
 
     [Header("Attacking")]
     [SerializeField] float timeBetweenAttacks = 0.2f;
     [SerializeField] float pushForce = 5f;
     //[SerializeField] GameObject projectile;
-    bool alreadyAttacked;
+    bool _alreadyAttacked;
 
     [Header("States")]
     [SerializeField] float sightRange;
@@ -45,14 +45,14 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] float friendDetectionBonus = 1.025f;
     [SerializeField] float generationLifeTime = 10f; 
     GeneticAlgorithm<float> ga;
-    int dnaLength = 2;
-    float generationTimer = 10f;
+    readonly int dnaLength = 2;
+    float _generationTimer = 10f;
 
     void Start()
     {
-        player = Player.Instance.gameObject.transform;
-        agent = GetComponent<NavMeshAgent>();
-        rb = GetComponent<Rigidbody>();
+        _player = Player.Instance.gameObject.transform;
+        _agent = GetComponent<NavMeshAgent>();
+        _rb = GetComponent<Rigidbody>();
         ga = new GeneticAlgorithm<float>(populationSize, dnaLength, GetRandomFloat, FitnessFunction, elitism, mutationRate);
 
         if (GetComponent<NavMeshAgent>() == null)
@@ -66,7 +66,7 @@ public class EnemyAI : MonoBehaviour
 
     void Update()
     {
-        if (alreadyAttacked)
+        if (_alreadyAttacked)
             return;
 
         //Check for sight and attack range
@@ -82,7 +82,7 @@ public class EnemyAI : MonoBehaviour
     {
         while(true)
         {
-            generationTimer += 1f;
+            _generationTimer += 1f;
             yield return new WaitForSecondsRealtime(1f);
         }
     }
@@ -118,50 +118,50 @@ public class EnemyAI : MonoBehaviour
 
     void Patrolling()
     {
-        if (!walkPointSet || generationTimer > generationLifeTime)
+        if (!_walkPointSet || _generationTimer > generationLifeTime)
             SearchWalkPoint();
 
-        if (walkPointSet)
-            agent.SetDestination(walkPoint);
+        if (_walkPointSet)
+            _agent.SetDestination(walkPoint);
 
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
         //Waypoint reached
         if (distanceToWalkPoint.magnitude < 0.5f)
-            walkPointSet = false;
+            _walkPointSet = false;
     }
 
     void SearchWalkPoint()
     {
-        generationTimer = 0f;
+        _generationTimer = 0f;
         ga.NewGeneration();
 
         Vector3 pos = transform.position;
         walkPoint = new Vector3(pos.x + ga.BestGenes[0], pos.y, pos.z + ga.BestGenes[1]);
 
-        walkPointSet = true;
+        _walkPointSet = true;
     }
 
     void ChasePlayer()
     {
-        agent.SetDestination(player.position);
+        _agent.SetDestination(_player.position);
     }
 
     void AttackPlayer()
     {
         //Make sure enemy doesn't move
-        agent.SetDestination(transform.position);
-        transform.LookAt(player);
+        _agent.SetDestination(transform.position);
+        transform.LookAt(_player);
 
-        if (!alreadyAttacked)
+        if (!_alreadyAttacked)
         {
-            agent.enabled = false;
-            ///Attack code here
-            rb.velocity = Vector3.zero;
-            rb.AddForce(Player.Instance.GetMoveDirection() * pushForce, ForceMode.VelocityChange);
-            rb.AddForce(transform.up * pushForce, ForceMode.VelocityChange);
-            ///End of attack code
-            alreadyAttacked = true;
+            _agent.enabled = false;
+
+            _rb.velocity = Vector3.zero;
+            _rb.AddForce(Player.Instance.GetMoveDirection() * pushForce, ForceMode.VelocityChange);
+            _rb.AddForce(transform.up * pushForce, ForceMode.VelocityChange);
+
+            _alreadyAttacked = true;
             
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
@@ -169,8 +169,8 @@ public class EnemyAI : MonoBehaviour
 
     void ResetAttack()
     {
-        alreadyAttacked = false;
-        agent.enabled = true;
+        _alreadyAttacked = false;
+        _agent.enabled = true;
     }
 
     void TakeDamage(float damage)
