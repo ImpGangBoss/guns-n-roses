@@ -16,6 +16,9 @@ public class GeneticAlgorithm<T>
 
     private float _fitnessSum;
     private List<DNA<T>> _newPopulation;
+    private int _dnaSize;
+    private Func<T> _getRandomGene;
+    private Func<int, float> _fitnessFunction;
 
     public GeneticAlgorithm(int popSize, int dnaSize, Func<T> getRandomGene,
      Func<int, float> fitnessFunction, int elitism,  float mutationRate = 0.05f)
@@ -25,6 +28,9 @@ public class GeneticAlgorithm<T>
         MutationRate = mutationRate;
         Population = new List<DNA<T>>(popSize);
         _newPopulation = new List<DNA<T>>(popSize);
+        _dnaSize = dnaSize;
+        _getRandomGene = getRandomGene;
+        _fitnessFunction = fitnessFunction;
 
         BestGenes = new T[dnaSize];
         
@@ -39,18 +45,22 @@ public class GeneticAlgorithm<T>
         return 0;
     } 
 
-    public void NewGeneration()
+    public void NewGeneration(int newIndividualsNum = 0, bool crossoverNewIndividuals = false)
     {
-        if (Population.Count <= 0)
+        int finalCount = Population.Count + newIndividualsNum;
+        
+        if (finalCount <= 0)
             return;
 
-        CalculateFitness();
+        if (Population.Count > 0)
+            CalculateFitness();
+
         _newPopulation.Clear();
 
-        for (int i = 0; i < Population.Count; ++i)
-            if (i < Elitism)
+        for (int i = 0; i < finalCount; ++i)
+            if (i < Elitism && i < Population.Count)
                 _newPopulation.Add(Population[i]);
-            else
+            else if (i < Population.Count || crossoverNewIndividuals)
             {
                 DNA<T> parent1 = ChooseParent();
                 DNA<T> parent2 = ChooseParent();
@@ -65,6 +75,8 @@ public class GeneticAlgorithm<T>
                 child.Mutate(MutationRate);
                 _newPopulation.Add(child);
             }
+            else
+                _newPopulation.Add(new DNA<T>(_dnaSize, _getRandomGene, _fitnessFunction));
 
         (Population, _newPopulation) = (_newPopulation, Population);
         Generation++;
