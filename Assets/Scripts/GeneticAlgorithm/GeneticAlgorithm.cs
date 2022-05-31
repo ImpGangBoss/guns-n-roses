@@ -65,10 +65,11 @@ public class GeneticAlgorithm<T>
                 DNA<T> parent1 = ChooseParent();
                 DNA<T> parent2 = ChooseParent();
 
+                parent1 ??= GetRandomParent();
+                parent2 ??= GetRandomParent();
+
                 if (parent1 == null || parent2 == null)
                     Debug.LogError("One of parents is equal to null");
-
-                parent1 ??= GetRandomParent();
 
                 DNA<T> child = parent1.Crossover(parent2);
 
@@ -112,4 +113,11 @@ public class GeneticAlgorithm<T>
     }
 
     private DNA<T> GetRandomParent() => Population[UnityEngine.Random.Range(0, Population.Count)];
+
+    public void ForceMutate()
+    {
+        foreach (var dna in Population)
+            dna.Mutate(1f);
+
+    }
 }

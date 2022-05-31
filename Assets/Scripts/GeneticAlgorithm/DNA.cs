@@ -13,8 +13,8 @@ public class DNA<T>
     public DNA(int size, Func<T> getRandomGene, Func<int, float> fitnessFunction, bool initGenes = true)
     {
         Genes = new T[size];
-        this._getRandomGene = getRandomGene;
-        this._fitnessFunction = fitnessFunction;
+        _getRandomGene = getRandomGene;
+        _fitnessFunction = fitnessFunction;
 
         if (initGenes)
             for (int i = 0; i < Genes.Length; i++)

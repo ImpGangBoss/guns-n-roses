@@ -1,8 +1,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using Random = UnityEngine.Random;
 
 public class EnemyAI : MonoBehaviour
 {
@@ -19,6 +21,7 @@ public class EnemyAI : MonoBehaviour
     [Header("Patrolling")]
     [SerializeField] Vector3 walkPoint;
     [SerializeField] float walkPointRange;
+    [SerializeField] float distanceToPointDelta = 0.3f;
     bool _walkPointSet;
 
     [Header("Attacking")]
@@ -38,7 +41,7 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] int populationSize = 200;
     [SerializeField] int elitism = 10;
     [SerializeField] float mutationRate = 0.05f;
-    [SerializeField] int exponentialCoefficientA = 5;
+    [SerializeField] int exponentialBase = 2;
     [Range(1f, 1.5f)]
     [SerializeField] float obstacleDetectionPenalty = 1.03f;
     [Range(1f, 1.5f)]
@@ -47,6 +50,7 @@ public class EnemyAI : MonoBehaviour
     GeneticAlgorithm<float> ga;
     readonly int dnaLength = 2;
     float _generationTimer = 10f;
+    private List<Vector3> _waypointsPositions;
 
     void Start()
     {
@@ -60,6 +64,9 @@ public class EnemyAI : MonoBehaviour
 
         if (Player.Instance.gameObject.transform == null)
             Debug.LogError("Player wasn't found");
+
+        _waypointsPositions = new List<Vector3>();
+        _waypointsPositions.Add(transform.position);
 
         StartCoroutine(Timer());
     }
@@ -87,7 +94,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private float GetRandomFloat() => UnityEngine.Random.Range(-walkPointRange, walkPointRange);
+    private float GetRandomFloat() => Random.Range(-_agent.radius, walkPointRange) * Mathf.Sign(Random.Range(-1,1));
     private float FitnessFunction(int index)
     {
         float score = 0f;
@@ -95,7 +102,9 @@ public class EnemyAI : MonoBehaviour
 
         Vector3 currentPosition = transform.position;
         Vector3 nextPosition = new Vector3(currentPosition.x + dna.Genes[0], currentPosition.y, currentPosition.z + dna.Genes[1]);
-        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround))
+        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround)
+            && !Physics.Raycast(transform.position, nextPosition, sightRange + _agent.radius, whatIsObstacle)
+            && !Physics.CheckSphere(nextPosition, _agent.radius, whatIsObstacle))
         {
             var distanceToPlayer = Vector3.Distance(Player.Instance.GetPosition(), nextPosition);
             score = 1f / (distanceToPlayer - attackRange);
@@ -105,13 +114,12 @@ public class EnemyAI : MonoBehaviour
 
             if (Physics.CheckSphere(nextPosition, sightRange, whatIsFriend))
                 score *= friendDetectionBonus;
-
         }
 
-        if (exponentialCoefficientA > 1)
-            score = (Mathf.Pow(exponentialCoefficientA, score) - 1) / (exponentialCoefficientA - 1);
+        if (exponentialBase > 1)
+            score = (Mathf.Pow(exponentialBase, score) - 1) / (exponentialBase - 1);
         else
-            Debug.Log("Low efficiency. Better with A > 1");
+            Debug.Log("Low efficiency. Better with base > 1");
 
         return score;
     }
@@ -122,29 +130,41 @@ public class EnemyAI : MonoBehaviour
             SearchWalkPoint();
 
         if (_walkPointSet)
+        {
+            transform.LookAt(walkPoint);
             _agent.SetDestination(walkPoint);
+        }
 
         Vector3 distanceToWalkPoint = transform.position - walkPoint;
 
         //Waypoint reached
-        if (distanceToWalkPoint.magnitude < 0.5f)
+        if (distanceToWalkPoint.magnitude < distanceToPointDelta)
             _walkPointSet = false;
+
     }
 
     void SearchWalkPoint()
     {
         _generationTimer = 0f;
         ga.NewGeneration();
+        _waypointsPositions.Add(transform.position);
 
-        Vector3 pos = transform.position;
-        walkPoint = new Vector3(pos.x + ga.BestGenes[0], pos.y, pos.z + ga.BestGenes[1]);
+        if (ga.BestFitness > 0f)
+        {
+            Vector3 pos = transform.position;
+            walkPoint = new Vector3(pos.x + ga.BestGenes[0], pos.y, pos.z + ga.BestGenes[1]);
 
-        _walkPointSet = true;
+            _walkPointSet = true;
+        }
+        else
+            ga.ForceMutate();
     }
 
     void ChasePlayer()
     {
-        _agent.SetDestination(_player.position);
+        transform.LookAt(_player);
+        if (!Physics.Raycast(_player.position, transform.forward, sightRange + _agent.radius, whatIsObstacle))
+            _agent.SetDestination(_player.position);
     }
 
     void AttackPlayer()
@@ -152,6 +172,7 @@ public class EnemyAI : MonoBehaviour
         //Make sure enemy doesn't move
         _agent.SetDestination(transform.position);
         transform.LookAt(_player);
+        _waypointsPositions.Add(transform.position);
 
         if (!_alreadyAttacked)
         {
@@ -188,12 +209,28 @@ public class EnemyAI : MonoBehaviour
 
     void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.red;
+        Gizmos.color = Color.black;
         Gizmos.DrawWireSphere(transform.position, attackRange);
-        Gizmos.color = Color.yellow;
+        Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, sightRange);
-        Gizmos.color = Color.cyan;
+        Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, obstacleDetectionRange);
+
+        if (Application.isPlaying)
+            DrawEnemyWay();
+    }
+
+    void DrawEnemyWay()
+    {
+        if (!_waypointsPositions.Any())
+            return;
+
+        Gizmos.color = Color.red;
+        for (int i = 0; i < _waypointsPositions.Count - 1; i++)
+        {
+            Gizmos.DrawLine(_waypointsPositions[i], _waypointsPositions[i + 1]);
+            Gizmos.DrawSphere(_waypointsPositions[i], 0.2f);
+        }
     }
 
     void OnCollisionEnter(Collision other)
