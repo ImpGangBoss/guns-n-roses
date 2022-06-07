@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4739e7dd14d10594799be66aa0b56c60, type: 3}
+  m_Name: DefaultParams
+  m_EditorClassIdentifier: 
+  _populationSize: 10
+  _dnaLength: 2
+  _elitism: 1
+  _mutationRate: 0.2
+  _exponentialBase: 2
+  _obstacleDetectionPenalty: 1.22
+  _friendDetectionBonus: 1.1
+  _generationLifeTime: 10
+  _searchRange: 3
+  _obstacleDetectionRange: 1

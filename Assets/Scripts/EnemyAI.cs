@@ -20,7 +20,6 @@ public class EnemyAI : MonoBehaviour
 
     [Header("Patrolling")]
     [SerializeField] Vector3 walkPoint;
-    [SerializeField] float walkPointRange;
     [SerializeField] float distanceToPointDelta = 0.3f;
     bool _walkPointSet;
 
@@ -33,23 +32,16 @@ public class EnemyAI : MonoBehaviour
     [Header("States")]
     [SerializeField] float sightRange;
     [SerializeField] float attackRange;
-    [SerializeField] float obstacleDetectionRange;
     [SerializeField] bool playerInSightRange;
     [SerializeField] bool playerInAttackRange;
 
     [Header("Genetic Algorithm")]
-    [SerializeField] int populationSize = 200;
-    [SerializeField] int elitism = 10;
-    [SerializeField] float mutationRate = 0.05f;
-    [SerializeField] int exponentialBase = 2;
-    [Range(1f, 1.5f)]
-    [SerializeField] float obstacleDetectionPenalty = 1.03f;
-    [Range(1f, 1.5f)]
-    [SerializeField] float friendDetectionBonus = 1.025f;
-    [SerializeField] float generationLifeTime = 10f; 
-    GeneticAlgorithm<float> ga;
-    readonly int dnaLength = 2;
-    float _generationTimer = 10f;
+    [SerializeField] List<Params> gaParamsList;
+    [SerializeField] int defaultParam;
+
+    GeneticAlgorithm<float> _ga;
+    Params _currConfig;
+    float _generationTimer;
     private List<Vector3> _waypointsPositions;
 
     void Start()
@@ -57,7 +49,15 @@ public class EnemyAI : MonoBehaviour
         _player = Player.Instance.gameObject.transform;
         _agent = GetComponent<NavMeshAgent>();
         _rb = GetComponent<Rigidbody>();
-        ga = new GeneticAlgorithm<float>(populationSize, dnaLength, GetRandomFloat, FitnessFunction, elitism, mutationRate);
+
+        if (!gaParamsList.Any())
+            Debug.LogError("Params list is empty");
+
+        if (gaParamsList[defaultParam] == null)
+            defaultParam = 0;
+
+        _currConfig = gaParamsList[defaultParam];
+        _ga = new GeneticAlgorithm<float>(_currConfig.PopulationSize, _currConfig.DnaLength, GetRandomFloat, FitnessFunction, _currConfig.Elitism, _currConfig.MutationRate);
 
         if (GetComponent<NavMeshAgent>() == null)
             Debug.LogError("Agent wasn't found");
@@ -94,30 +94,35 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private float GetRandomFloat() => Random.Range(-_agent.radius, walkPointRange) * Mathf.Sign(Random.Range(-1,1));
+    private float GetRandomFloat() => Random.Range(_agent.radius, _currConfig.SearchRange) * Mathf.Sign(Random.Range(-1,1));
     private float FitnessFunction(int index)
     {
         float score = 0f;
-        DNA<float> dna = ga.Population[index];
+        DNA<float> dna = _ga.Population[index];
 
         Vector3 currentPosition = transform.position;
-        Vector3 nextPosition = new Vector3(currentPosition.x + dna.Genes[0], currentPosition.y, currentPosition.z + dna.Genes[1]);
-        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround)
-            && !Physics.Raycast(transform.position, nextPosition, sightRange + _agent.radius, whatIsObstacle)
-            && !Physics.CheckSphere(nextPosition, _agent.radius, whatIsObstacle))
+        Vector3 nextPosition = new Vector3(
+            currentPosition.x + dna.Genes[0],
+            currentPosition.y,
+            currentPosition.z + dna.Genes[1]);
+        
+        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround) //is there ground?
+            && !Physics.Raycast(transform.position, nextPosition, _currConfig.SearchRange + _agent.radius, whatIsObstacle) //can we get there?
+            && !Physics.CheckSphere(nextPosition, _agent.radius, whatIsObstacle)) //is it in obstacle?
         {
             var distanceToPlayer = Vector3.Distance(Player.Instance.GetPosition(), nextPosition);
             score = 1f / (distanceToPlayer - attackRange);
 
-            if (Physics.CheckSphere(nextPosition, obstacleDetectionRange, whatIsObstacle))
-                score /= obstacleDetectionPenalty;
+            if (Physics.CheckSphere(nextPosition, _currConfig.ObstacleDetectionRange, whatIsObstacle)) //are obstacles too close to us?
+                score /= _currConfig.ObstacleDetectionPenalty;
 
-            if (Physics.CheckSphere(nextPosition, sightRange, whatIsFriend))
-                score *= friendDetectionBonus;
+            if (Physics.CheckSphere(nextPosition, sightRange, whatIsFriend)) //are friends around us?
+                score *= _currConfig.FriendDetectionBonus;
         }
 
-        if (exponentialBase > 1)
-            score = (Mathf.Pow(exponentialBase, score) - 1) / (exponentialBase - 1);
+        float coefficient = _currConfig.ExponentialBase;
+        if (coefficient > 1)
+            score = (Mathf.Pow(coefficient, score) - 1) / (coefficient - 1);
         else
             Debug.Log("Low efficiency. Better with base > 1");
 
@@ -126,7 +131,7 @@ public class EnemyAI : MonoBehaviour
 
     void Patrolling()
     {
-        if (!_walkPointSet || _generationTimer > generationLifeTime)
+        if (!_walkPointSet || _generationTimer > _currConfig.GenerationLifeTime)
             SearchWalkPoint();
 
         if (_walkPointSet)
@@ -146,23 +151,24 @@ public class EnemyAI : MonoBehaviour
     void SearchWalkPoint()
     {
         _generationTimer = 0f;
-        ga.NewGeneration();
+        _ga.NewGeneration();
         _waypointsPositions.Add(transform.position);
 
-        if (ga.BestFitness > 0f)
+        if (_ga.BestFitness > 0f)
         {
             Vector3 pos = transform.position;
-            walkPoint = new Vector3(pos.x + ga.BestGenes[0], pos.y, pos.z + ga.BestGenes[1]);
+            walkPoint = new Vector3(pos.x + _ga.BestGenes[0], pos.y, pos.z + _ga.BestGenes[1]);
 
             _walkPointSet = true;
         }
         else
-            ga.ForceMutate();
+            _ga.ForceMutate(); //need to find new move direction
     }
 
     void ChasePlayer()
     {
         transform.LookAt(_player);
+        //can we get to player with out hitting obstacles?
         if (!Physics.Raycast(_player.position, transform.forward, sightRange + _agent.radius, whatIsObstacle))
             _agent.SetDestination(_player.position);
     }
@@ -213,11 +219,17 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, attackRange);
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, sightRange);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(transform.position, obstacleDetectionRange);
 
         if (Application.isPlaying)
             DrawEnemyWay();
+
+        if (_currConfig == null)
+            return;
+
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(transform.position, _currConfig.ObstacleDetectionRange);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(transform.position, _currConfig.SearchRange);
     }
 
     void DrawEnemyWay()
