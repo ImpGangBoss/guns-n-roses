@@ -10,15 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4739e7dd14d10594799be66aa0b56c60, type: 3}
-  m_Name: DefaultParams
+  m_Name: Default
   m_EditorClassIdentifier: 
-  _populationSize: 10
-  _dnaLength: 2
-  _elitism: 1
-  _mutationRate: 0.2
-  _exponentialBase: 2
-  _obstacleDetectionPenalty: 1.22
-  _friendDetectionBonus: 1.1
-  _generationLifeTime: 10
-  _searchRange: 3
-  _obstacleDetectionRange: 1
+  strategyName: Default
+  populationSize: 10
+  dnaLength: 2
+  elitism: 1
+  mutationRate: 0.05
+  exponentialBase: 2
+  obstacleDetectionPenalty: 1.3
+  friendDetectionBonus: 1
+  generationLifeTime: 10
+  searchRange: 15
+  obstacleDetectionRange: 2

@@ -38,11 +38,14 @@ public class EnemyAI : MonoBehaviour
     [Header("Genetic Algorithm")]
     [SerializeField] List<Params> gaParamsList;
     [SerializeField] int defaultParam;
+    [SerializeField] bool showWaypointsInGame = true;
 
     GeneticAlgorithm<float> _ga;
     Params _currConfig;
     float _generationTimer;
     private List<Vector3> _waypointsPositions;
+
+    private bool showAdditionalInfo = true;
 
     void Start()
     {
@@ -170,7 +173,15 @@ public class EnemyAI : MonoBehaviour
         transform.LookAt(_player);
         //can we get to player with out hitting obstacles?
         if (!Physics.Raycast(_player.position, transform.forward, sightRange + _agent.radius, whatIsObstacle))
+        {
             _agent.SetDestination(_player.position);
+
+            if (showAdditionalInfo)
+            {
+                Debug.LogWarning("Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLenght() + "\nStrategy: " + _currConfig.StrategyName);
+                showAdditionalInfo = false;
+            }
+        }
     }
 
     void AttackPlayer()
@@ -220,7 +231,7 @@ public class EnemyAI : MonoBehaviour
         Gizmos.color = Color.magenta;
         Gizmos.DrawWireSphere(transform.position, sightRange);
 
-        if (Application.isPlaying)
+        if (!showWaypointsInGame)
             DrawEnemyWay();
 
         if (_currConfig == null)
@@ -230,6 +241,12 @@ public class EnemyAI : MonoBehaviour
         Gizmos.DrawWireSphere(transform.position, _currConfig.ObstacleDetectionRange);
         Gizmos.color = Color.cyan;
         Gizmos.DrawWireSphere(transform.position, _currConfig.SearchRange);
+    }
+
+    void OnDrawGizmos()
+    {
+        if(showWaypointsInGame && Application.isPlaying)
+            DrawEnemyWay();
     }
 
     void DrawEnemyWay()
@@ -243,6 +260,15 @@ public class EnemyAI : MonoBehaviour
             Gizmos.DrawLine(_waypointsPositions[i], _waypointsPositions[i + 1]);
             Gizmos.DrawSphere(_waypointsPositions[i], 0.2f);
         }
+    }
+
+    float GetEnemyWayLenght()
+    {
+        float result = 0f;
+        for (int i = 0; i < _waypointsPositions.Count - 1; i++)
+            result += Vector3.Distance(_waypointsPositions[i], _waypointsPositions[i + 1]);
+
+        return result;
     }
 
     void OnCollisionEnter(Collision other)
