@@ -21,5 +21,5 @@ MonoBehaviour:
   obstacleDetectionPenalty: 1.3
   friendDetectionBonus: 1
   generationLifeTime: 10
-  searchRange: 15
+  searchRange: 12
   obstacleDetectionRange: 2

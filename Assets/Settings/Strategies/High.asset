@@ -10,16 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4739e7dd14d10594799be66aa0b56c60, type: 3}
-  m_Name: Low
+  m_Name: High
   m_EditorClassIdentifier: 
-  strategyName: Low
-  populationSize: 5
+  strategyName: Expert
+  populationSize: 15
   dnaLength: 2
-  elitism: 1
-  mutationRate: 0
-  exponentialBase: 1.01
-  obstacleDetectionPenalty: 1.35
-  friendDetectionBonus: 1
-  generationLifeTime: 15
-  searchRange: 20
+  elitism: 2
+  mutationRate: 0.1
+  exponentialBase: 2
+  obstacleDetectionPenalty: 1.2
+  friendDetectionBonus: 1.1
+  generationLifeTime: 7
+  searchRange: 7.5
   obstacleDetectionRange: 2

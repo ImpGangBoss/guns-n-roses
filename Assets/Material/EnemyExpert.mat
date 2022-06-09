@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: ToonTest
+  m_Name: EnemyExpert
   m_Shader: {fileID: -6465566751694194690, guid: 4aa46d33b0afb5e49bb0703218e42e0e,
     type: 3}
   m_ValidKeywords: []
@@ -81,7 +81,7 @@ Material:
     m_Floats:
     - Vector1_38BD3441: 0.711
     - Vector1_CF8B0D8D: 4.07
-    - Vector1_ED5ABFD9: 0.087
+    - Vector1_ED5ABFD9: 0.04
     - Vector1_F3F6B787: 0.18
     - _AlphaClip: 0
     - _Blend: 0
@@ -111,9 +111,9 @@ Material:
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
-    - Color_28180829: {r: 0.14006455, g: 0.058823533, b: 0.5019608, a: 1}
-    - Color_57D43A16: {r: 1, g: 1, b: 1, a: 0}
-    - Color_F689E8B9: {r: 0.33333337, g: 0.44436586, b: 1, a: 1}
+    - Color_28180829: {r: 0.5019608, g: 0.058823533, b: 0.08710049, a: 1}
+    - Color_57D43A16: {r: 1, g: 0.5981132, b: 0.5981132, a: 0}
+    - Color_F689E8B9: {r: 1, g: 0, b: 0.08823538, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}

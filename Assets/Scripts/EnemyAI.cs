@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AI;
+using System.IO;
+
 using Random = UnityEngine.Random;
 
 public class EnemyAI : MonoBehaviour
@@ -45,7 +47,8 @@ public class EnemyAI : MonoBehaviour
     float _generationTimer;
     private List<Vector3> _waypointsPositions;
 
-    private bool showAdditionalInfo = true;
+    private bool _showAdditionalInfo = true;
+    private string _gaResultsData;
 
     void Start()
     {
@@ -70,6 +73,8 @@ public class EnemyAI : MonoBehaviour
 
         _waypointsPositions = new List<Vector3>();
         _waypointsPositions.Add(transform.position);
+
+        _gaResultsData += "Generation:\tBestFitness\t:BestGene1:\tBestGene2:\n";
 
         StartCoroutine(Timer());
     }
@@ -157,6 +162,8 @@ public class EnemyAI : MonoBehaviour
         _ga.NewGeneration();
         _waypointsPositions.Add(transform.position);
 
+        _gaResultsData += _ga.Generation + "\t" + _ga.BestFitness + "\t" + _ga.BestGenes[0] + "\t" + _ga.BestGenes[1] + "\n";
+
         if (_ga.BestFitness > 0f)
         {
             Vector3 pos = transform.position;
@@ -176,10 +183,11 @@ public class EnemyAI : MonoBehaviour
         {
             _agent.SetDestination(_player.position);
 
-            if (showAdditionalInfo)
+            if (_showAdditionalInfo)
             {
-                Debug.LogWarning("Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLenght() + "\nStrategy: " + _currConfig.StrategyName);
-                showAdditionalInfo = false;
+                string summary = "Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLenght() + "\nStrategy: " + _currConfig.StrategyName;
+                _gaResultsData += summary;
+                _showAdditionalInfo = false;
             }
         }
     }
@@ -200,6 +208,9 @@ public class EnemyAI : MonoBehaviour
             _rb.AddForce(transform.up * pushForce, ForceMode.VelocityChange);
 
             _alreadyAttacked = true;
+
+            WriteResultsInFile();
+            gameObject.SetActive(false);
             
             Invoke(nameof(ResetAttack), timeBetweenAttacks);
         }
@@ -275,5 +286,19 @@ public class EnemyAI : MonoBehaviour
     {
         if (other.gameObject.CompareTag("Bullet"))
             TakeDamage(other.gameObject.GetComponent<Bullet>().Damage);
+    }
+
+    void WriteResultsInFile()
+    {
+        string path = Application.dataPath + "/Results/" + _currConfig.StrategyName + ".txt";
+        
+        StreamWriter writer = new StreamWriter(path, true);
+        writer.WriteLine(_gaResultsData);
+        writer.Close();
+
+        StreamReader reader = new StreamReader(path);
+        Debug.Log(reader.ReadToEnd());
+        //Debug.Log("Path: " + path);
+        reader.Close();
     }
 }
