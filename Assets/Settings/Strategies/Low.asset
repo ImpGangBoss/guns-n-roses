@@ -15,11 +15,11 @@ MonoBehaviour:
   strategyName: Low
   populationSize: 5
   dnaLength: 2
-  elitism: 1
+  elitism: 0
   mutationRate: 0
-  exponentialBase: 1.01
+  exponentialBase: 1.2
   obstacleDetectionPenalty: 1.35
   friendDetectionBonus: 1
-  generationLifeTime: 15
-  searchRange: 15
+  generationLifeTime: 12
+  searchRange: 10
   obstacleDetectionRange: 2

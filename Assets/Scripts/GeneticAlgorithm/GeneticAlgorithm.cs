@@ -117,7 +117,6 @@ public class GeneticAlgorithm<T>
     public void ForceMutate()
     {
         foreach (var dna in Population)
-            dna.Mutate(1f);
-
+            dna.Mutate(0.999f);
     }
 }

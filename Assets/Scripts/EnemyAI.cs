@@ -65,7 +65,7 @@ public class EnemyAI : MonoBehaviour
         _currConfig = gaParamsList[defaultParam];
         _ga = new GeneticAlgorithm<float>(_currConfig.PopulationSize, _currConfig.DnaLength, GetRandomFloat, FitnessFunction, _currConfig.Elitism, _currConfig.MutationRate);
 
-        if (GetComponent<NavMeshAgent>() == null)
+        if (_agent == null)
             Debug.LogError("Agent wasn't found");
 
         if (Player.Instance.gameObject.transform == null)
@@ -102,7 +102,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    private float GetRandomFloat() => Random.Range(_agent.radius, _currConfig.SearchRange) * Mathf.Sign(Random.Range(-1,1));
+    private float GetRandomFloat() => Random.Range(0.0f, _currConfig.SearchRange) * Mathf.Sign(Random.Range(-1,1));
     private float FitnessFunction(int index)
     {
         float score = 0f;
@@ -113,10 +113,18 @@ public class EnemyAI : MonoBehaviour
             currentPosition.x + dna.Genes[0],
             currentPosition.y,
             currentPosition.z + dna.Genes[1]);
-        
-        if (Physics.Raycast(nextPosition, -transform.up, 1f, whatIsGround) //is there ground?
-            && !Physics.Raycast(transform.position, nextPosition, _currConfig.SearchRange + _agent.radius, whatIsObstacle) //can we get there?
-            && !Physics.CheckSphere(nextPosition, _agent.radius, whatIsObstacle)) //is it in obstacle?
+
+        bool isThereGround = Physics.Raycast(nextPosition, -transform.up, _agent.height * 2, whatIsGround);
+        RaycastHit hit = new RaycastHit();
+        bool isThereObstacleOnWay = Physics.SphereCast(transform.position, _agent.radius, nextPosition, out hit, Vector3.Distance(transform.position, nextPosition), whatIsObstacle);
+
+        if (isThereObstacleOnWay && showWaypointsInGame)
+        {
+            Debug.DrawLine(transform.position, hit.point, Color.red, 1f);
+            Debug.DrawLine(transform.position, nextPosition, Color.yellow, 1f);
+        }
+
+        if (isThereGround && !isThereObstacleOnWay)
         {
             var distanceToPlayer = Vector3.Distance(Player.Instance.GetPosition(), nextPosition);
             score = 1f / (distanceToPlayer - attackRange);
@@ -164,7 +172,7 @@ public class EnemyAI : MonoBehaviour
 
         _gaResultsData += _ga.Generation + "\t" + _ga.BestFitness + "\t" + _ga.BestGenes[0] + "\t" + _ga.BestGenes[1] + "\n";
 
-        if (_ga.BestFitness > 0f)
+        if (_ga.BestFitness > float.Epsilon)
         {
             Vector3 pos = transform.position;
             walkPoint = new Vector3(pos.x + _ga.BestGenes[0], pos.y, pos.z + _ga.BestGenes[1]);
@@ -172,7 +180,10 @@ public class EnemyAI : MonoBehaviour
             _walkPointSet = true;
         }
         else
+        {
             _ga.ForceMutate(); //need to find new move direction
+            Debug.Log(name + "Mutated");
+        }
     }
 
     void ChasePlayer()
@@ -185,7 +196,7 @@ public class EnemyAI : MonoBehaviour
 
             if (_showAdditionalInfo)
             {
-                string summary = "Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLenght() + "\nStrategy: " + _currConfig.StrategyName;
+                string summary = "Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLength() + "\nStrategy: " + _currConfig.StrategyName;
                 _gaResultsData += summary;
                 _showAdditionalInfo = false;
             }
@@ -273,7 +284,7 @@ public class EnemyAI : MonoBehaviour
         }
     }
 
-    float GetEnemyWayLenght()
+    float GetEnemyWayLength()
     {
         float result = 0f;
         for (int i = 0; i < _waypointsPositions.Count - 1; i++)
