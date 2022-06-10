@@ -16,10 +16,10 @@ MonoBehaviour:
   populationSize: 30
   dnaLength: 2
   elitism: 3
-  mutationRate: 0.2
+  mutationRate: 0.25
   exponentialBase: 2
   obstacleDetectionPenalty: 1.2
-  friendDetectionBonus: 1.1
+  friendDetectionBonus: 1.2
   generationLifeTime: 5
   searchRange: 5
   obstacleDetectionRange: 1

@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4739e7dd14d10594799be66aa0b56c60, type: 3}
   m_Name: High
   m_EditorClassIdentifier: 
-  strategyName: Expert
-  populationSize: 15
+  strategyName: High
+  populationSize: 13
   dnaLength: 2
-  elitism: 2
-  mutationRate: 0.1
-  exponentialBase: 1.8
+  elitism: 1
+  mutationRate: 0.05
+  exponentialBase: 1.73
   obstacleDetectionPenalty: 1.2
   friendDetectionBonus: 1.1
-  generationLifeTime: 7
+  generationLifeTime: 10
   searchRange: 7.5
-  obstacleDetectionRange: 2
+  obstacleDetectionRange: 1

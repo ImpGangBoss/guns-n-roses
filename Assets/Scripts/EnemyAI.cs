@@ -19,6 +19,7 @@ public class EnemyAI : MonoBehaviour
     Transform _player;
     NavMeshAgent _agent;
     Rigidbody _rb;
+    float _timeStep = 0.01f;
 
     [Header("Patrolling")]
     [SerializeField] Vector3 walkPoint;
@@ -45,10 +46,10 @@ public class EnemyAI : MonoBehaviour
     GeneticAlgorithm<float> _ga;
     Params _currConfig;
     float _generationTimer;
-    private List<Vector3> _waypointsPositions;
+    float _commonTimer;
 
-    private bool _showAdditionalInfo = true;
-    private string _gaResultsData;
+    List<Vector3> _waypointsPositions;
+    string _gaResultsData;
 
     void Start()
     {
@@ -71,10 +72,13 @@ public class EnemyAI : MonoBehaviour
         if (Player.Instance.gameObject.transform == null)
             Debug.LogError("Player wasn't found");
 
+        if (_currConfig.ExponentialBase <= 1)
+            Debug.Log("Low efficiency. Better with base > 1");
+
         _waypointsPositions = new List<Vector3>();
         _waypointsPositions.Add(transform.position);
 
-        _gaResultsData += "Generation:\tBestFitness\t:BestGene1:\tBestGene2:\n";
+        _gaResultsData += "Generation:\tBestFitness\tTime:\n";
 
         StartCoroutine(Timer());
     }
@@ -97,8 +101,9 @@ public class EnemyAI : MonoBehaviour
     {
         while(true)
         {
-            _generationTimer += 1f;
-            yield return new WaitForSecondsRealtime(1f);
+            _generationTimer += _timeStep;
+            _commonTimer += _timeStep;
+            yield return new WaitForSecondsRealtime(_timeStep);
         }
     }
 
@@ -114,13 +119,13 @@ public class EnemyAI : MonoBehaviour
             currentPosition.y,
             currentPosition.z + dna.Genes[1]);
 
-        bool isThereGround = Physics.Raycast(nextPosition, -transform.up, _agent.height * 2, whatIsGround);
+        bool isThereGround = Physics.Raycast(nextPosition, -transform.up, _agent.height, whatIsGround);
         bool isThereObstacleOnWay = IsThereObstacle(nextPosition, out var hit, Vector3.Distance(transform.position, nextPosition));
 
         if (isThereObstacleOnWay && showWaypointsInGame)
         {
-            Debug.DrawLine(transform.position, hit.point, Color.red, 1f);
-            Debug.DrawLine(transform.position, nextPosition, Color.yellow, 1f);
+            Debug.DrawLine(transform.position, hit.point, Color.red, 2f);
+            Debug.DrawLine(transform.position, nextPosition, Color.yellow, 2f);
         }
 
         if (isThereGround && !isThereObstacleOnWay)
@@ -138,8 +143,6 @@ public class EnemyAI : MonoBehaviour
         float coefficient = _currConfig.ExponentialBase;
         if (coefficient > 1)
             score = (Mathf.Pow(coefficient, score) - 1) / (coefficient - 1);
-        else
-            Debug.Log("Low efficiency. Better with base > 1");
 
         return score;
     }
@@ -174,7 +177,7 @@ public class EnemyAI : MonoBehaviour
         _ga.NewGeneration();
         _waypointsPositions.Add(transform.position);
 
-        _gaResultsData += _ga.Generation + "\t" + _ga.BestFitness + "\t" + _ga.BestGenes[0] + "\t" + _ga.BestGenes[1] + "\n";
+        _gaResultsData += _ga.Generation + "\t" + _ga.BestFitness + "\t" + _commonTimer + "\n";
 
         if (_ga.BestFitness > float.Epsilon)
         {
@@ -192,16 +195,7 @@ public class EnemyAI : MonoBehaviour
         transform.LookAt(_player);
         //can we get to player with out hitting obstacles?
         if (!IsThereObstacle(_player.position, out var hit, Vector3.Distance(transform.position, _player.position)))
-        {
             _agent.SetDestination(_player.position);
-
-            if (_showAdditionalInfo)
-            {
-                string summary = "Distance: " + GetEnemyWayLength() + "\nStrategy: " + _currConfig.StrategyName;
-                _gaResultsData += summary;
-                _showAdditionalInfo = false;
-            }
-        }
         else
             Debug.DrawLine(transform.position, hit.point, Color.grey, 1f);
     }
@@ -302,11 +296,20 @@ public class EnemyAI : MonoBehaviour
             TakeDamage(other.gameObject.GetComponent<Bullet>().Damage);
     }
 
-    void WriteResultsInFile()
+    public void WriteResultsInFile()
     {
+        string summary = "Strategy:\tDistance:\tTime:\n";
+        summary += _currConfig.StrategyName + "\t" + GetEnemyWayLength() + "\t" + _commonTimer + "\n";
+
+        string sumPath = Application.dataPath + "/Results/Summary.txt";
+
+        StreamWriter writer = new StreamWriter(sumPath, true);
+        writer.WriteLine(summary);
+        writer.Close();
+
         string path = Application.dataPath + "/Results/" + _currConfig.StrategyName + ".txt";
         
-        StreamWriter writer = new StreamWriter(path, true);
+        writer = new StreamWriter(path, true);
         writer.WriteLine(_gaResultsData);
         writer.Close();
         Debug.Log(_gaResultsData);

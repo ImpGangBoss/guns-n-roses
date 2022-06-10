@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Pool;
 
@@ -10,6 +11,8 @@ public class Player : MonoBehaviour
     ThirdPersonMovement _movementController;
 
     public static Player Instance { get; private set; }
+    //private float _time;
+    //public float Time => _time;
     private void Awake() 
     {     
         if (Instance != null && Instance != this) 
@@ -39,7 +42,18 @@ public class Player : MonoBehaviour
             {
                 Destroy(bullet.gameObject);
             }, false, 10, 100);
+
+        //StartCoroutine(Timer());
     }
+
+    //IEnumerator Timer()
+    //{
+    //    while (true)
+    //    {
+    //        _time += timeStep;
+    //        yield return new WaitForSecondsRealtime(timeStep);
+    //    }
+    //}
 
     public void Shoot()
     {

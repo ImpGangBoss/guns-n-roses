@@ -9,7 +9,7 @@ public class Params : ScriptableObject
     [SerializeField] int populationSize;
     [SerializeField] int dnaLength;
     [SerializeField] int elitism;
-    [SerializeField] float mutationRate;
+    [Range(0f, 1f)] [SerializeField] float mutationRate;
     [Range(1f, 2f)] [SerializeField] float exponentialBase;
     [Range(1f, 1.5f)] [SerializeField] float obstacleDetectionPenalty;
     [Range(1f, 1.5f)] [SerializeField] float friendDetectionBonus;

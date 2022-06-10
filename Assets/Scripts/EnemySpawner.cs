@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEditor;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [SerializeField] private List<GameObject> enemiesPrefabs;
-    [SerializeField] private List<BoxCollider> spawnZoneList;
-    [SerializeField] private int gameCycles = 10;
-    [SerializeField] private bool simulate = true;
-    private string _key = "Cycle";
-    private List<GameObject> _enemies;
+    [SerializeField] List<GameObject> enemiesPrefabs;
+    [SerializeField] List<BoxCollider> spawnZoneList;
+    [SerializeField] int gameCycles = 10;
+    [SerializeField] bool simulate = true;
+    [SerializeField] private float cycleTime = 120f;
+    string _key = "Cycle";
+    List<GameObject> _enemies;
 
     void Start()
     {
@@ -40,7 +42,7 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.LogWarning("Simulation over. Game cycles simulated: " + gameCycles);
             PlayerPrefs.DeleteKey(_key);
-            Application.Quit();
+            EditorApplication.isPlaying = false;
             return;
         }
 
@@ -51,6 +53,17 @@ public class EnemySpawner : MonoBehaviour
     {
         if (_enemies.Count(x => x.gameObject.activeInHierarchy) < 1 && simulate)
             SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+
+        if (Time.realtimeSinceStartup > cycleTime * (gameCycles - PlayerPrefs.GetInt(_key)))
+        {
+            foreach (var enemy in _enemies)
+            {
+                enemy.GetComponent<EnemyAI>().WriteResultsInFile();
+                enemy.SetActive(false);
+            }
+
+            Debug.LogWarning("Time is out. Starting new cycle...");
+        }
     }
 
     private void SpawnEnemies()

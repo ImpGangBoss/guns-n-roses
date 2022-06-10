@@ -13,12 +13,12 @@ MonoBehaviour:
   m_Name: Low
   m_EditorClassIdentifier: 
   strategyName: Low
-  populationSize: 7
+  populationSize: 10
   dnaLength: 2
   elitism: 0
   mutationRate: 0.05
-  exponentialBase: 1.2
-  obstacleDetectionPenalty: 1.35
+  exponentialBase: 1
+  obstacleDetectionPenalty: 1.3
   friendDetectionBonus: 1
   generationLifeTime: 12
   searchRange: 10
