@@ -29,17 +29,11 @@ public class ThirdPersonMovement : MonoBehaviour
     [Header("Smoothness")]
     [SerializeField] float turnSmoothTime = 0.4f;
     [SerializeField] float recenterThreshold = 0.75f;
-    // [Range(0, 2)]
-    // [SerializeField] float sensitivityX = 0.8f;
-    // [Range(0, 2)]
-    // [SerializeField] float sensitivityY = 1f;
-    //Vector3 sensitivity;
     float _turnSmoothVelocity;
 
     void Start()
     {
         Cursor.lockState = CursorLockMode.Locked;
-        //sensitivity = new Vector3(sensitivityX, 0f, sensitivityY);
     }
 
     void Update()

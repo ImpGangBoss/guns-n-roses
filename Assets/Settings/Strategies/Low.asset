@@ -13,10 +13,10 @@ MonoBehaviour:
   m_Name: Low
   m_EditorClassIdentifier: 
   strategyName: Low
-  populationSize: 5
+  populationSize: 7
   dnaLength: 2
   elitism: 0
-  mutationRate: 0
+  mutationRate: 0.05
   exponentialBase: 1.2
   obstacleDetectionPenalty: 1.35
   friendDetectionBonus: 1

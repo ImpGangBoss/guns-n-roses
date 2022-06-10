@@ -115,8 +115,7 @@ public class EnemyAI : MonoBehaviour
             currentPosition.z + dna.Genes[1]);
 
         bool isThereGround = Physics.Raycast(nextPosition, -transform.up, _agent.height * 2, whatIsGround);
-        RaycastHit hit = new RaycastHit();
-        bool isThereObstacleOnWay = Physics.SphereCast(transform.position, _agent.radius, nextPosition, out hit, Vector3.Distance(transform.position, nextPosition), whatIsObstacle);
+        bool isThereObstacleOnWay = IsThereObstacle(nextPosition, out var hit, Vector3.Distance(transform.position, nextPosition));
 
         if (isThereObstacleOnWay && showWaypointsInGame)
         {
@@ -143,6 +142,11 @@ public class EnemyAI : MonoBehaviour
             Debug.Log("Low efficiency. Better with base > 1");
 
         return score;
+    }
+
+    bool IsThereObstacle(Vector3 destination, out RaycastHit hit, float distance)
+    {
+        return Physics.SphereCast(transform.position, _agent.radius, destination, out hit, distance, whatIsObstacle);
     }
 
     void Patrolling()
@@ -180,27 +184,26 @@ public class EnemyAI : MonoBehaviour
             _walkPointSet = true;
         }
         else
-        {
             _ga.ForceMutate(); //need to find new move direction
-            Debug.Log(name + "Mutated");
-        }
     }
 
     void ChasePlayer()
     {
         transform.LookAt(_player);
         //can we get to player with out hitting obstacles?
-        if (!Physics.Raycast(_player.position, transform.forward, sightRange + _agent.radius, whatIsObstacle))
+        if (!IsThereObstacle(_player.position, out var hit, Vector3.Distance(transform.position, _player.position)))
         {
             _agent.SetDestination(_player.position);
 
             if (_showAdditionalInfo)
             {
-                string summary = "Enemy: " + gameObject.name + "\nDistance: " + GetEnemyWayLength() + "\nStrategy: " + _currConfig.StrategyName;
+                string summary = "Distance: " + GetEnemyWayLength() + "\nStrategy: " + _currConfig.StrategyName;
                 _gaResultsData += summary;
                 _showAdditionalInfo = false;
             }
         }
+        else
+            Debug.DrawLine(transform.position, hit.point, Color.grey, 1f);
     }
 
     void AttackPlayer()
@@ -306,10 +309,6 @@ public class EnemyAI : MonoBehaviour
         StreamWriter writer = new StreamWriter(path, true);
         writer.WriteLine(_gaResultsData);
         writer.Close();
-
-        StreamReader reader = new StreamReader(path);
-        Debug.Log(reader.ReadToEnd());
-        //Debug.Log("Path: " + path);
-        reader.Close();
+        Debug.Log(_gaResultsData);
     }
 }

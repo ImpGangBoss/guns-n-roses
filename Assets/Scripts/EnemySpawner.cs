@@ -40,7 +40,7 @@ public class EnemySpawner : MonoBehaviour
         {
             Debug.LogWarning("Simulation over. Game cycles simulated: " + gameCycles);
             PlayerPrefs.DeleteKey(_key);
-            simulate = false;
+            Application.Quit();
             return;
         }
 
