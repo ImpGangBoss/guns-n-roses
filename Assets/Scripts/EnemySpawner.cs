@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -35,12 +36,18 @@ public class EnemySpawner : MonoBehaviour
         _enemies = new List<GameObject>();
 
         if (!PlayerPrefs.HasKey(_key))
+        {
             PlayerPrefs.SetInt(_key, gameCycles);
+            WriteSpecialSymbol("---------------------------------------------");
+        }
         else if (PlayerPrefs.GetInt(_key) > 0)
             PlayerPrefs.SetInt(_key, PlayerPrefs.GetInt(_key) - 1);
         else
         {
-            Debug.LogWarning("Simulation over. Game cycles simulated: " + gameCycles);
+            string endMessage = "Simulation over. Game cycles simulated: " + gameCycles;
+            Debug.LogWarning(endMessage);
+            WriteSpecialSymbol(endMessage);
+            WriteSpecialSymbol("---------------------------------------------");
             PlayerPrefs.DeleteKey(_key);
             EditorApplication.isPlaying = false;
             return;
@@ -78,5 +85,14 @@ public class EnemySpawner : MonoBehaviour
 
             _enemies.Add(Instantiate(enemyToSpawn, randomPosition, Quaternion.identity));
         }
+    }
+
+    void WriteSpecialSymbol(string symbols)
+    {
+        string sumPath = Application.dataPath + "/Results/Summary.txt";
+
+        StreamWriter writer = new StreamWriter(sumPath, true);
+        writer.WriteLine(symbols);
+        writer.Close();
     }
 }

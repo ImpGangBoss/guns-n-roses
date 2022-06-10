@@ -17,7 +17,7 @@ MonoBehaviour:
   dnaLength: 2
   elitism: 0
   mutationRate: 0.05
-  exponentialBase: 1
+  exponentialBase: 1.5
   obstacleDetectionPenalty: 1.3
   friendDetectionBonus: 1
   generationLifeTime: 12

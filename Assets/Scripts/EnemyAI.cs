@@ -299,7 +299,7 @@ public class EnemyAI : MonoBehaviour
     public void WriteResultsInFile()
     {
         string summary = "Strategy:\tDistance:\tTime:\n";
-        summary += _currConfig.StrategyName + "\t" + GetEnemyWayLength() + "\t" + _commonTimer + "\n";
+        summary += _currConfig.StrategyName + "\t" + GetEnemyWayLength() + "\t" + _commonTimer;
 
         string sumPath = Application.dataPath + "/Results/Summary.txt";
 
