@@ -125,7 +125,7 @@ public class EnemyAI : MonoBehaviour
         if (isThereObstacleOnWay && showWaypointsInGame)
         {
             Debug.DrawLine(transform.position, hit.point, Color.red, 2f);
-            Debug.DrawLine(transform.position, nextPosition, Color.yellow, 2f);
+            Debug.DrawLine(transform.position, nextPosition, Color.grey, 2f);
         }
 
         if (isThereGround && !isThereObstacleOnWay)
@@ -185,6 +185,7 @@ public class EnemyAI : MonoBehaviour
             walkPoint = new Vector3(pos.x + _ga.BestGenes[0], pos.y, pos.z + _ga.BestGenes[1]);
 
             _walkPointSet = true;
+            Debug.DrawLine(pos, walkPoint, Color.yellow, 1f);
         }
         else
             _ga.ForceMutate(); //need to find new move direction
@@ -202,7 +203,7 @@ public class EnemyAI : MonoBehaviour
 
     void AttackPlayer()
     {
-        //Make sure enemy doesn't move
+        //make sure enemy doesn't move
         _agent.SetDestination(transform.position);
         transform.LookAt(_player);
         _waypointsPositions.Add(transform.position);
@@ -258,7 +259,7 @@ public class EnemyAI : MonoBehaviour
 
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, _currConfig.ObstacleDetectionRange);
-        Gizmos.color = Color.cyan;
+        Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, _currConfig.SearchRange);
     }
 

@@ -89,6 +89,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 522281162061377137, guid: 92a4dbd3ad5760b40974b824648378f1,
         type: 3}
+      propertyPath: attackRange
+      value: 1.5
+      objectReference: {fileID: 0}
+    - target: {fileID: 522281162061377137, guid: 92a4dbd3ad5760b40974b824648378f1,
+        type: 3}
       propertyPath: defaultParam
       value: 3
       objectReference: {fileID: 0}
@@ -274,7 +279,7 @@ PrefabInstance:
     - target: {fileID: 2863005646576061180, guid: 92a4dbd3ad5760b40974b824648378f1,
         type: 3}
       propertyPath: m_Name
-      value: EnemyExpert
+      value: EnemyExpert Variant
       objectReference: {fileID: 0}
     - target: {fileID: 2863005646576061181, guid: 92a4dbd3ad5760b40974b824648378f1,
         type: 3}

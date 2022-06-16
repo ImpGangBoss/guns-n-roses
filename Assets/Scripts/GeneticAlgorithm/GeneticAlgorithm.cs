@@ -69,7 +69,7 @@ public class GeneticAlgorithm<T>
                 parent2 ??= GetRandomParent();
 
                 if (parent1 == null || parent2 == null)
-                    Debug.LogError("One of parents is equal to null");
+                    Debug.LogError("One of the parents is equal to null");
 
                 DNA<T> child = parent1.Crossover(parent2);
 
@@ -117,6 +117,6 @@ public class GeneticAlgorithm<T>
     public void ForceMutate()
     {
         foreach (var dna in Population)
-            dna.Mutate(0.999f);
+            dna.Mutate(1f);
     }
 }
