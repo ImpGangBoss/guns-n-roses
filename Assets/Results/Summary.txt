@@ -176,3 +176,32 @@ Strategy:	Distance:	Time:
 Default	93.93723	28.88057
 Simulation over. Game cycles simulated: 5
 ---------------------------------------------
+---------------------------------------------
+Strategy:	Distance:	Time:
+Default	0	0.01
+Strategy:	Distance:	Time:
+Expert	0	0.01
+Strategy:	Distance:	Time:
+High	0	0.01
+Strategy:	Distance:	Time:
+Low	0	0.01
+Strategy:	Distance:	Time:
+Default	0	0.01
+Strategy:	Distance:	Time:
+Expert	0	0.01
+Strategy:	Distance:	Time:
+High	0	0.01
+Strategy:	Distance:	Time:
+Low	0	0.01
+Strategy:	Distance:	Time:
+High	74.73516	16.40028
+Strategy:	Distance:	Time:
+Expert	89.32693	22.29041
+Strategy:	Distance:	Time:
+Low	99.60181	23.92045
+Strategy:	Distance:	Time:
+Default	159.4841	67.466
+Strategy:	Distance:	Time:
+Default	53.80244	18.07032
+Strategy:	Distance:	Time:
+Expert	70.75228	19.99036
